@@ -23,6 +23,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "task.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -68,34 +69,7 @@ static void MX_USART2_UART_Init(void);
 
 /* USER CODE BEGIN PFP */
 
-/* Task Structure */
-typedef struct task {
-	void (*TaskFunc)(void); /* Task function */
-	struct task *next;      /* Pointer to next Task Structure. It behaves like Linked List */
-}task;
-struct task *head_task_node; /* Head node of Linked List */
 
-/**
- * \brief           Define region data for dynamic memory allocation of task structure
- */
-uint8_t region1_data[1024];
-
-/**
- * \brief           Define final regions
- */
-static lwmem_region_t regions[] = {
-    { region1_data, sizeof(region1_data) },
-    /* Add more regions if needed */
-};
-
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-
-int add_task(struct task *task_var);
-int del_task(uint8_t task_index);
 void Task1(void);
 void Task2(void);
 void Task3(void);
@@ -210,69 +184,6 @@ int main(void)
 }
 
 
-/*
- * @brief - Add task to the task list
- * @param - struct task *task_var : Task Structure
- * @return - -1 on failure, 0 on success
- */
-int add_task(struct task *task_var)
-{
-	/* Linked List insertion algorithm */
-	
-	if(totalTaks >= 100)
-	{
-		sprintf(buffer, "Can not have more than 100 tasks");
-		return -1;
-	}
-	
-	task_var->next = head_task_node;
-	head_task_node = task_var;
-	totalTaks++;
-	
-	return 0;
-}
-
-
-/*
- * @brief - Delete task from task list
- * @param - Task index : Which task to delete i.e. 1, 2, 3, etc 
- * @return - -1 on failure, 0 on success
- */
-int del_task(uint8_t task_index)
-{
-	/* Linked List deletion algorithm */
-	
-	if(task_index < 0 || task_index > 100)
-	{
-		uint8_t len = sprintf(buffer, "Invalid task index");
-		HAL_UART_Transmit(&huart2, (uint8_t *)buffer, len, 100);
-		return -1;
-	}
-	
-	struct task *task_var = head_task_node;
-	struct task *task_del;
-	task_index = totalTaks - task_index;
-	
-	if(task_index == 0)
-	{
-		head_task_node = task_var->next;
-		lwmem_free(task_var);
-		totalTaks--;
-		return 0;
-	}
-	
-	uint8_t i = 0;
-	
-	for(i=0;i<(task_index - 1);i++)
-		task_var = task_var->next;
-	
-	task_del = task_var->next;
-	task_var->next = task_del->next;
-	lwmem_free(task_del); /* Free memory of task_del structure */
-	totalTaks--;
-	
-	return 0;
-}
 
 void Task1() {
 	sprintf(buffer, "Hello from task 1");
